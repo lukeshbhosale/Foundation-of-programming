@@ -1,0 +1,705 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <time.h>
+
+/* ---------------- Project.C (Exercise & User Info) ---------------- */
+
+int SaveExerciseData(int calories_burned) {
+    FILE *file = fopen("ExerciseData.txt", "a");
+    if (file == NULL) {
+        printf("Error opening exercise data file!\n");
+        return 0;
+    }
+    
+    time_t t = time(NULL);
+    struct tm *tm_info = localtime(&t);
+    char date[20];
+    strftime(date, sizeof(date), "%d-%m-%Y", tm_info);
+    
+    fprintf(file, "Date: %s | Calories Burned: %d\n", date, calories_burned);
+    fclose(file);
+    printf("Exercise data saved successfully!\n");
+    return 1;
+}
+
+int ViewDataByDate() {
+    FILE *file = fopen("ExerciseData.txt", "r");
+    if (file == NULL) {
+        printf("\nNo exercise data found!\n");
+        return 0;
+    }
+    
+    char searchDate[20];
+    printf("\nEnter the date (DD-MM-YYYY): ");
+    scanf("%s", searchDate);
+    
+    char buffer[200];
+    char fileDate[20];
+    int calories;
+    int found = 0;
+    
+    printf("\n===== Exercise Data for %s =====\n", searchDate);
+    
+    while (fgets(buffer, sizeof(buffer), file) != NULL) {
+        sscanf(buffer, "Date: %19s | Calories Burned: %d", fileDate, &calories);
+        
+        if (strcmp(fileDate, searchDate) == 0) {
+            printf("Date: %s\nCalories Burned: %d\n\n", fileDate, calories);
+            found = 1;
+        }
+    }
+    
+    fclose(file);
+    
+    if (found == 0) {
+        printf("No data found for %s\n", searchDate);
+    }
+    
+    return found;
+}
+
+/* Global variables */
+float weight = 0;
+int age = 0;
+float height = 0, BMI = 0;
+int initialized = 0;
+float todayCaloriesBurned = 0; /* Global variable to store today's total calories burned */
+
+int Exercise(float weight, int age, float height, float BMI, char Gender){
+
+    int exercise;
+    int rep,sets;
+    float calories_burned = 0;
+    float calories_burned_per_exercise;
+    int i;
+    char arr[50][15]; /* fixed: allocate reasonable space */
+    char data[15];
+
+    float MET ;
+    printf("\n===== Exercise Tracker =====");
+    printf("\nYour Current Weight: %.2f kg\n", weight);
+    printf("Enter the no. of Total Exercise you did Today :");
+    scanf("%d",&i);
+
+    for(int j = 0; j < i; j++){
+
+    printf("\nExercise %d:\n", j+1);
+    printf("Enter The Body Weight Exercise You Did :");
+    printf("\n 1) Press 1 For Pushups\n 2) Press 2 For Squats \n 3)Press 3 Pull-ups \n 4) Press 4 for Crunches \n 5) Press 5 for Sit-Ups ");
+    scanf("%d", &exercise);
+    printf("\n Enter the Sets: ");
+    scanf("%d", &sets);
+    printf("\n Enter the Reps per Set: ");
+    scanf("%d", &rep);
+    printf("time taken for each exercise in minutes :");
+    int time;
+    scanf("%d",&time);
+
+
+    switch(exercise){
+
+        case 1:
+            strcpy(data, "Pushups");
+            MET = 3.8;
+            calories_burned_per_exercise = ((MET * 3.5 * weight * time) / 200);
+            break;
+        case 2:
+            strcpy(data, "Squats");
+            MET = 5.5;
+            calories_burned_per_exercise = ((MET * 3.5 * weight * time) / 200);
+            break;
+        case 3:
+            strcpy(data, "Pull-ups");
+            MET = 3.1;
+            calories_burned_per_exercise = ((MET * 3.5 * weight * time) / 200);
+            break;
+        case 4:
+            strcpy(data, "Crunches");
+            MET = 3.1;
+            calories_burned_per_exercise = ((MET * 3.5 * weight * time) / 200);
+            break;
+        case 5:
+            strcpy(data, "Sit-ups");
+            MET = 4.0;
+            calories_burned_per_exercise = ((MET * 3.5 * weight * time) / 200);
+            break;
+        default:
+            printf("Invalid exercise choice!\n");
+            calories_burned_per_exercise = 0;
+        strcpy(arr[j], data);
+    }
+
+    printf("Calories burned for this exercise: %.2f kCal\n", calories_burned_per_exercise);
+    calories_burned =  calories_burned + calories_burned_per_exercise;
+}
+
+    printf("\nTotal Calories Burned In Today's Workout : %.2f kCal", calories_burned);
+    printf("\nSAVING THE DATA.....");
+    todayCaloriesBurned = calories_burned; /* Store in global variable */
+    SaveExerciseData((int)calories_burned);
+}
+
+int IsDataInitialized() {
+    FILE *file = fopen("UserInfo.txt", "r");
+    if (file == NULL) {
+        return 0;
+    }
+    
+    fclose(file);
+    return 1;
+}
+
+void LoadUserInfoFromFile() {
+    FILE *file = fopen("UserInfo.txt", "r");
+    if (file == NULL) {
+        return;
+    }
+    
+    char buffer[300];
+    char goal[20];
+    
+    /* Read the last line (most recent data) */
+    while (fgets(buffer, sizeof(buffer), file) != NULL) {
+        sscanf(buffer, "Initialized on: %*s %*s | Age: %d | Height: %f | Weight: %f", &age, &height, &weight);
+        sscanf(buffer, "Updated on: %*s %*s | Age: %d | Height: %f | Weight: %f", &age, &height, &weight);
+    }
+    
+    BMI = weight / ((height/100)*(height/100));
+    fclose(file);
+    printf("\nUser info loaded from file!\n");
+}
+
+void InitializeUserInfo(){
+
+    printf("\n===== User Info Setup =====");
+    printf("\nEnter your Age: ");
+    scanf("%d", &age);
+    printf("Enter Your Height in cm: ");
+    scanf("%f", &height);
+    printf("Enter Your Weight in kg: ");
+    scanf("%f", &weight);
+
+    char Choice;
+
+
+    BMI = weight / ((height/100)*(height/100));
+
+    printf("Your BMI is %.2f\n", BMI);
+    
+    /* Save initial user info to file */
+    FILE *file = fopen("UserInfo.txt", "w");
+    if (file == NULL) {
+        printf("Error opening user info file!\n");
+        return;
+    }
+    
+    time_t t = time(NULL);  
+    struct tm *tm_info = localtime(&t);
+    char date[20];
+    strftime(date, sizeof(date), "%d-%m-%Y %H:%M:%S", tm_info);
+    
+    fprintf(file, "Initialized on: %s | Age: %d | Height: %.2f | Weight: %.2f | BMI: %.2f \n", date, age, height, weight, BMI);
+    fclose(file);
+    
+    printf("User info saved successfully!\n");
+    initialized = 1;
+}
+
+void AddExerciseData(){
+    if(IsDataInitialized() == 0) {
+        printf("\nNo exercise data found! Please initialize and add exercise data first.\n");
+        return;
+    }
+    LoadUserInfoFromFile();
+    Exercise(weight, age, height, BMI, 'M');
+}
+
+void EditUserInfo(){
+    if(IsDataInitialized() == 0) {
+        printf("\nNo exercise data found! Please initialize and add exercise data first.\n");
+        return;
+    }
+    
+    LoadUserInfoFromFile();
+    printf("\n===== Edit User Info =====");
+    printf("\nCurrent Age: %d\n", age);
+    printf("Enter new Age: ");
+    scanf("%d", &age);
+    
+    printf("Current Height: %.2f cm\n", height);
+    printf("Enter new Height in cm: ");
+    scanf("%f", &height);
+    
+    printf("Current Weight: %.2f kg\n", weight);
+    printf("Enter new Weight in kg: ");
+    scanf("%f", &weight);
+    
+    BMI = weight / ((height/100)*(height/100));
+    printf("Updated BMI is %.2f\n", BMI);
+    
+    /* Save updated info to file */
+    FILE *file = fopen("UserInfo.txt", "a");
+    if (file == NULL) {
+        printf("Error opening user info file!\n");
+        return;
+    }
+    
+    time_t t = time(NULL);
+    struct tm *tm_info = localtime(&t);
+    char date[20];
+    strftime(date, sizeof(date), "%d-%m-%Y %H:%M:%S", tm_info);
+    
+    fprintf(file, "Updated on: %s | Age: %d | Height: %.2f | Weight: %.2f | BMI: %.2f\n", date, age, height, weight, BMI);
+    fclose(file);
+    
+    printf("User info updated and saved successfully!\n");
+}
+
+
+/* ---------------- (Calorie Tracker) ---------------- */
+
+#define MAX_FOODS 200
+#define MAX_LOG 500
+
+struct Food {
+    char name[50];
+    float calories;
+    char unit;
+};
+
+struct LogEntry {
+    char meal[20];
+    char name[50];
+    float quantity;
+    float totalCalories;
+};
+
+struct Food foodDB[MAX_FOODS];
+struct LogEntry logBook[MAX_LOG];
+
+int foodCount = 0;
+int logCount = 0;
+
+void toLowerCase(char str[]) {
+    for(int i=0; str[i]; i++)
+        if(str[i]>='A' && str[i]<='Z')
+            str[i]+=32;
+}
+
+int min(int a,int b,int c){
+    int m=a;
+    if(b<m) m=b;
+    if(c<m) m=c;
+    return m;
+}
+
+int editDistance(char a[], char b[]) {
+    int m=strlen(a), n=strlen(b);
+    int dp[50][50];
+
+    for(int i=0;i<=m;i++) dp[i][0]=i;
+    for(int j=0;j<=n;j++) dp[0][j]=j;
+
+    for(int i=1;i<=m;i++)
+        for(int j=1;j<=n;j++)
+            if(a[i-1]==b[j-1])
+                dp[i][j]=dp[i-1][j-1];
+            else
+                dp[i][j]=1+min(dp[i-1][j],
+                              dp[i][j-1],
+                              dp[i-1][j-1]);
+
+    return dp[m][n];
+}
+
+void loadFoods(){
+    FILE *file=fopen("foods.txt","r");
+    if(file==NULL){
+        printf("foods.txt not found.\n");
+        return;
+    }
+
+    while(fscanf(file,"%s %f %c",
+        foodDB[foodCount].name,
+        &foodDB[foodCount].calories,
+        &foodDB[foodCount].unit)!=EOF)
+        foodCount++;
+
+    fclose(file);
+}
+
+int findFood(char name[]){
+
+    toLowerCase(name);
+
+    int bestIndex=-1;
+    int bestDistance=100;
+
+    for(int i=0;i<foodCount;i++){
+
+        char temp[50];
+        strcpy(temp,foodDB[i].name);
+        toLowerCase(temp);
+
+        if(strcmp(name,temp)==0)
+            return i;
+
+        int dist=editDistance(name,temp);
+
+        if(dist<bestDistance){
+            bestDistance=dist;
+            bestIndex=i;
+        }
+    }
+
+    if(bestDistance<=2){
+        char choice;
+        printf("Did you mean '%s'? (y/n): ",
+               foodDB[bestIndex].name);
+        scanf(" %c",&choice);
+
+        if(choice=='y'||choice=='Y')
+            return bestIndex;
+        else
+            return -1;
+    }
+
+    return -1;
+}
+
+void saveReport(){
+
+    time_t t=time(NULL);
+    struct tm tm=*localtime(&t);
+
+    FILE *file=fopen("report.txt","a");
+    if(file==NULL) return;
+
+    fprintf(file,"\nDate: %02d-%02d-%04d\n",
+            tm.tm_mday,
+            tm.tm_mon+1,
+            tm.tm_year+1900);
+
+    float breakfast=0,lunch=0,dinner=0;
+
+    fprintf(file,"---- Breakfast ----\n");
+    for(int i=0;i<logCount;i++){
+        if(strcmp(logBook[i].meal,"Breakfast")==0){
+            fprintf(file,"%-12s %-10.0f %-10.2f\n",
+                    logBook[i].name,
+                    logBook[i].quantity,
+                    logBook[i].totalCalories);
+            breakfast+=logBook[i].totalCalories;
+        }
+    }
+    fprintf(file,"Breakfast Total: %.2f kcal\n\n",breakfast);
+
+    fprintf(file,"---- Lunch ----\n");
+    for(int i=0;i<logCount;i++){
+        if(strcmp(logBook[i].meal,"Lunch")==0){
+            fprintf(file,"%-12s %-10.0f %-10.2f\n",
+                    logBook[i].name,
+                    logBook[i].quantity,
+                    logBook[i].totalCalories);
+            lunch+=logBook[i].totalCalories;
+        }
+    }
+    fprintf(file,"Lunch Total: %.2f kcal\n\n",lunch);
+
+    fprintf(file,"---- Dinner ----\n");
+    for(int i=0;i<logCount;i++){
+        if(strcmp(logBook[i].meal,"Dinner")==0){
+            fprintf(file,"%-12s %-10.0f %-10.2f\n",
+                    logBook[i].name,
+                    logBook[i].quantity,
+                    logBook[i].totalCalories);
+            dinner+=logBook[i].totalCalories;
+        }
+    }
+    fprintf(file,"Dinner Total: %.2f kcal\n\n",dinner);
+
+    float totalIntake = breakfast + lunch + dinner;
+
+    fprintf(file,"TOTAL CALORIE INTAKE: %.2f kcal\n", totalIntake);
+
+    /* Load user info to get age for recommendation */
+    LoadUserInfoFromFile();
+
+    /* Use global variable for calories burned today */
+    int burnedTotal = (int)todayCaloriesBurned;
+
+    /* Recommended intake based on age */
+    int recommended = 0;
+    if(age>0){
+        if(age<=3) recommended = 1000;
+        else if(age<=8) recommended = 1400;
+        else if(age<=13) recommended = 1800;
+        else if(age<=18) recommended = 2200;
+        else if(age<=30) recommended = 2400;
+        else if(age<=50) recommended = 2200;
+        else recommended = 2000;
+    }
+
+    fprintf(file,"Recommended Calorie Intake (age %d): %d kcal\n", age, recommended);
+    fprintf(file,"Calories Burned (Exercise): %d kcal\n", burnedTotal);
+    fprintf(file,"NET CALORIES (Intake - Burned): %.2f kcal\n", totalIntake - (float)burnedTotal);
+
+    if(totalIntake - (float)burnedTotal > recommended)
+        fprintf(file,"Outcome: Based on today's data you are likely to GAIN weight.\n");
+    else if(totalIntake - (float)burnedTotal < recommended)
+        fprintf(file,"Outcome: Based on today's data you are likely to LOSE weight.\n");
+    else
+        fprintf(file,"Outcome: Based on today's data your weight is likely to remain STABLE.\n");
+
+    fclose(file);
+}
+
+void addMeal(){
+
+    char meal[20];
+
+    while(1){
+
+        int mealChoice;
+
+        printf("\nSelect Meal:\n");
+        printf("1. Breakfast\n");
+        printf("2. Lunch\n");
+        printf("3. Dinner\n");
+        printf("Enter choice: ");
+        scanf("%d",&mealChoice);
+
+        if(mealChoice==1)
+            strcpy(meal,"Breakfast");
+        else if(mealChoice==2)
+            strcpy(meal,"Lunch");
+        else if(mealChoice==3)
+            strcpy(meal,"Dinner");
+        else{
+            printf("Invalid meal choice.\n");
+            continue;
+        }
+
+        while(1){
+
+            char foodName[50];
+            printf("Enter food name: ");
+            scanf("%s",foodName);
+
+            int index=findFood(foodName);
+
+            if(index==-1){
+                printf("Food not recognized.\n");
+            } else {
+
+                float quantity;
+
+                switch(foodDB[index].unit){
+                    case 'b': printf("Enter number of bowls: "); break;
+                    case 'r': printf("Enter number of rotis: "); break;
+                    case 'e': printf("Enter number of eggs: "); break;
+                    case 'l': printf("Enter number of plates: "); break;
+                    case 'k': printf("Enter number of katoris: "); break;
+                    case 'c': printf("Enter number of cups: "); break;
+                    case 'm': printf("Enter quantity in ml: "); break;
+                    case 'w': printf("Enter quantity in grams: "); break;
+                    case 'p': printf("Enter number of fruits: "); break;
+                    default: printf("Enter quantity: ");
+                }
+
+                scanf("%f",&quantity);
+
+                float calories;
+
+                if(foodDB[index].unit=='w' ||
+                   foodDB[index].unit=='m')
+                    calories=(quantity/100) *
+                             foodDB[index].calories;
+                else
+                    calories=quantity *
+                             foodDB[index].calories;
+
+                strcpy(logBook[logCount].meal,meal);
+                strcpy(logBook[logCount].name,
+                       foodDB[index].name);
+                logBook[logCount].quantity=quantity;
+                logBook[logCount].totalCalories=calories;
+
+                logCount++;
+
+                printf("Added %.2f kcal.\n",calories);
+            }
+
+            int nextChoice;
+
+            printf("\n1. Add Another Food\n");
+            printf("2. Change Meal\n");
+            printf("3. Main Menu\n");
+            printf("Enter choice: ");
+            scanf("%d",&nextChoice);
+
+            if(nextChoice==1)
+                continue;
+            else if(nextChoice==2)
+                break;
+            else if(nextChoice==3){
+                saveReport();
+                return;
+            }
+        }
+    }
+}
+
+void viewToday(){
+
+    float breakfast=0,lunch=0,dinner=0;
+
+    printf("\n========================================\n");
+    printf("              DAILY REPORT\n");
+    printf("========================================\n");
+
+    printf("\n---- Breakfast ----\n");
+    printf("Food         Quantity     Calories\n");
+    printf("----------------------------------------\n");
+
+    for(int i=0;i<logCount;i++){
+        if(strcmp(logBook[i].meal,"Breakfast")==0){
+            printf("%-12s %-12.0f %-10.2f\n",
+                   logBook[i].name,
+                   logBook[i].quantity,
+                   logBook[i].totalCalories);
+            breakfast+=logBook[i].totalCalories;
+        }
+    }
+
+    printf("----------------------------------------\n");
+    printf("Breakfast Total: %.2f kcal\n",breakfast);
+
+    printf("\n---- Lunch ----\n");
+    printf("Food         Quantity     Calories\n");
+    printf("----------------------------------------\n");
+
+    for(int i=0;i<logCount;i++){
+        if(strcmp(logBook[i].meal,"Lunch")==0){
+            printf("%-12s %-12.0f %-10.2f\n",
+                   logBook[i].name,
+                   logBook[i].quantity,
+                   logBook[i].totalCalories);
+            lunch+=logBook[i].totalCalories;
+        }
+    }
+
+    printf("----------------------------------------\n");
+    printf("Lunch Total: %.2f kcal\n",lunch);
+
+    printf("\n---- Dinner ----\n");
+    printf("Food         Quantity     Calories\n");
+    printf("----------------------------------------\n");
+
+    for(int i=0;i<logCount;i++){
+        if(strcmp(logBook[i].meal,"Dinner")==0){
+            printf("%-12s %-12.0f %-10.2f\n",
+                   logBook[i].name,
+                   logBook[i].quantity,
+                   logBook[i].totalCalories);
+            dinner+=logBook[i].totalCalories;
+        }
+    }
+
+    printf("----------------------------------------\n");
+    printf("Dinner Total: %.2f kcal\n",dinner);
+
+    printf("\n========================================\n");
+    printf("TOTAL CALORIE INTAKE: %.2f kcal\n",
+           breakfast+lunch+dinner);
+    printf("========================================\n");
+}
+
+void viewByDate(){
+
+    int day, month, year;
+
+    printf("Enter date (dd mm yyyy): ");
+    scanf("%d %d %d",&day,&month,&year);
+
+    FILE *file=fopen("report.txt","r");
+
+    if(file==NULL){
+        printf("No saved reports found.\n");
+        return;
+    }
+
+    char line[300];
+    char search[50];
+
+    sprintf(search,"Date: %02d-%02d-%04d",day,month,year);
+
+    int found = 0;
+
+    while(fgets(line,sizeof(line),file)){
+
+    
+        if(strstr(line,search)!=NULL){
+
+            found = 1;
+            printf("\n%s",line);
+
+            while(fgets(line,sizeof(line),file)){
+                if(strncmp(line,"Date:",5)==0)
+                    break;
+                printf("%s",line);
+            }
+
+            break;
+        }
+    }
+
+    if(!found)
+        printf("No report found for that date.\n");
+
+    fclose(file);
+}
+
+/* ---------------- Combined Main ---------------- */
+
+int main(){
+
+    int choice;
+
+    while(1){
+        printf("\n===== MyFitnessTracker =====\n");
+        printf("1) User Info (Init / Edit)\n");
+        printf("2) Exercise Tracker\n");
+        printf("3) Calorie Tracker\n");
+        printf("4) Exit\n");
+        printf("Enter choice: ");
+        if(scanf("%d", &choice)!=1){
+            int c; while((c=getchar())!='\n' && c!=EOF);
+            continue;
+        }
+
+        if(choice==1){
+            printf("\n1) Initialize User Info\n2) Edit User Info\nEnter choice: ");
+            int c; scanf("%d", &c);
+            if(c==1) InitializeUserInfo(); else if(c==2) EditUserInfo();
+        } else if(choice==2){
+            printf("\n1) Add Exercise Data\n2) View Exercise Data by Date\nEnter choice: ");
+            int c; scanf("%d", &c);
+            if(c==1) AddExerciseData(); else if(c==2) ViewDataByDate();
+        } else if(choice==3){
+            loadFoods();
+            printf("\n== Calorie Tracker ==\n");
+            printf("1) Add Meal\n2) View Today's Report\n3) View Report By Date\nEnter choice: ");
+            int c; scanf("%d", &c);
+            if(c==1) addMeal(); else if(c==2) viewToday(); else if(c==3) viewByDate();
+        } else if(choice==4){
+            printf("Exiting...\n");
+            break;
+        } else {
+            printf("Invalid choice.\n");
+        }
+    }
+
+    return 0;
+}
